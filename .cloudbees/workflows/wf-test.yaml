@@ -1,0 +1,46 @@
+apiVersion: automation.cloudbees.io/v1alpha1
+kind: workflow
+name: wf-test
+on:
+  push:
+    branches:
+      - "**"
+jobs:
+  dump-context:
+    environment: Prod
+    steps:
+      - uses: docker://golang:1.20.3-alpine3.17
+        name: Dump GitHub context
+        env:
+          CLOUDBEES_CONTEXT: ${{ toJSON(cloudbees) }}
+          VARS_CONTEXT: ${{ toJSON(vars) }}
+          SECRETS_CONTEXT: ${{ toJSON(secrets) }}
+        run: |
+          echo "----- VARS -----"
+          echo "$VARS_CONTEXT"
+          echo "----- SECRETS -----"
+          echo "$SECRETS_CONTEXT"
+          echo "----- CONTEXT -----"
+          echo "cloudbees.scm.sha: ${{ cloudbees.scm.sha }}"
+          echo "$CLOUDBEES_CONTEXT"
+  build2:
+    steps:
+      - name: Say hello 3
+        uses: docker://golang:1.20.3-alpine3.17
+        shell: sh
+        run: |
+          echo "hello world"
+      - name: loop for some secs
+        uses: docker://amazon/aws-cli
+        shell: bash
+        run: |
+          echo "until loop"
+          i=63
+          until [ $i == 1 ]
+          do
+              echo "countdown: $i secs";
+              i=$((i-1))
+              sleep 1
+          done
+          echo "i value is $i"
+          echo "loop terminated"
